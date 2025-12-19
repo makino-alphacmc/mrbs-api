@@ -3,6 +3,7 @@ import datetime
 import random
 import requests
 import json
+import pandas as pd
 
 
 page = st.sidebar.selectbox('Choose your page', ['users', 'rooms', 'bookings'])
@@ -30,32 +31,52 @@ if page == 'users':
         st.json(res.json())
 
 elif page == 'rooms':
-    st.title('APIテスト画面(会議室)')
+    st.title('会議室登録画面')
     with st.form(key='room'):
-        room_id: int = random.randint(0,10)
         room_name: str = st.text_input('会議室名', max_chars=12)
         capacity: int = st.number_input('定員', step=1)
         data = {
-            'room_id': room_id,
             'room_name': room_name,
             'capacity': capacity
         }
-        submit_button = st.form_submit_button(label="リクエスト送信")
+        submit_button = st.form_submit_button(label="会議室登録")
     if submit_button:
-        st.write('## 送信データ')
-        st.json(data)
-        st.write('## レスポンス結果')
         url = 'http://127.0.0.1:8000/rooms'
         res = requests.post(
           url,
           json=data,
           timeout=5
           )
+        if res.status_code == 200:
+            st.success('会議室登録完了')
         st.write(res.status_code)
         st.json(res.json())
 
 elif page == 'bookings':
-    st.title('APIテスト画面(予約)')
+  # ユーザ一覧取得
+    st.title('会議室予約画面')
+    url_users = 'http://127.0.0.1:8000/users'
+    res = requests.get(url_users)
+    users = res.json()
+    # ユーザ名をキー、ユーザIDをバリュー
+    users_dict = {}
+    for user in users:
+        users_dict[user['username']] = user['user_id']
+
+  # 会議室一覧取得
+    url_rooms = 'http://127.0.0.1:8000/rooms'
+    res = requests.get(url_rooms)
+    rooms = res.json()
+    rooms_dict = {}
+    for room in rooms:
+        rooms_dict[room['room_name']] = {
+            'room_id': room['room_id'],
+            'capacity': room['capacity']
+        }
+    st.write('## 会議室一覧')
+    df_rooms = pd.DataFrame(rooms)
+    st.table(df_rooms)
+
     with st.form(key='booking'):
         booking_id: int = random.randint(0,10)
         user_id: int = random.randint(0,10)
