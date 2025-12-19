@@ -20,4 +20,5 @@ class Booking(Base):
     room_id = Column(Integer, ForeignKey('rooms.room_id', ondelete='SET NULL'), nullable=True)
     booked_num = Column(Integer, nullable=False)
     start_datetime = Column(DateTime, nullable=False)
+    end_datetime = Column(DateTime, nullable=False)
 
